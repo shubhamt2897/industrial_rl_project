@@ -37,17 +37,20 @@ This project is divided into several stages, each representing a different level
 
 ## 🎥 Trained Simulation Results
 
-Here's a demonstration of my trained agent performing the reaching task across multiple episodes:
+Here's a demonstration of my trained agent performing the reaching task:
 
-### Combined Episodes Demonstration
+### High-Quality Demo
+![High Quality Robot Demo](demo_high_quality.gif)
 
-**Option 1: Side-by-Side Grid View (6 episodes simultaneously)**
-![Combined Episodes Grid](combined_episodes.gif)
+### Multiple Episodes View
 
-**Option 2: Sequential Episodes (one after another)**
-![Sequential Episodes](episodes_sequence.gif)
+**Grid View - All Episodes Simultaneously:**
+![Combined Episodes Grid](combined_episodes_hq.gif)
 
-*These GIFs show the Franka Panda robot successfully reaching for randomly positioned red targets in the simulation environment. The demonstrations include episodes 1, 5, 9, 13, 17, and 20, showcasing different target positions, arm trajectories, and success scenarios. The agent learned this behavior through reinforcement learning using PPO (Proximal Policy Optimization) over 5 million training steps.*
+**Sequential View - Episodes One After Another:**
+![Sequential Episodes](episodes_sequence_hq.gif)
+
+*These high-quality GIFs demonstrate the Franka Panda robot successfully reaching for randomly positioned red targets in the simulation environment. The demonstrations showcase episodes 1, 5, 9, 13, 17, and 20, highlighting different target positions, arm trajectories, and success scenarios. The agent learned this behavior through reinforcement learning using PPO (Proximal Policy Optimization) over 5 million training steps.*
 
 ### Additional Results
 For the complete set of 20 evaluation episodes, see the `tuned_results_05/` folder containing all original MP4 recordings.
