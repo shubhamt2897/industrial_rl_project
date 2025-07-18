@@ -51,7 +51,7 @@ For the complete set of 20 evaluation episodes, see the `tuned_results_05/` fold
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repo-url>
+    git clone https://github.com/shubhamt2897/industrial_rl_project.git
     cd industrial_rl_project
     ```
 
