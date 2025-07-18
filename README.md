@@ -37,11 +37,32 @@ This project is divided into several stages, each representing a different level
 
 ## 🎥 Trained Simulation Results
 
-Here's a demonstration of the trained agent performing the reaching task:
+Here are demonstrations of my trained agent performing the reaching task across different episodes:
 
-https://github.com/user-attachments/assets/tuned_results_05_episode_1
+### Episode Demonstrations
 
-*The video shows the Franka Panda robot successfully reaching for randomly positioned targets in the simulation environment. The agent learned this behavior through reinforcement learning using PPO (Proximal Policy Optimization).*
+**Episode 1 - Basic Reach:**
+![Episode 1](episode_1.gif)
+
+**Episode 5 - Alternative Trajectory:**
+![Episode 5](episode_5.gif)
+
+**Episode 9 - Quick Success:**
+![Episode 9](episode_9.gif)
+
+**Episode 13 - Complex Path:**
+![Episode 13](episode_13.gif)
+
+**Episode 17 - Efficient Movement:**
+![Episode 17](episode_17.gif)
+
+**Episode 20 - Final Evaluation:**
+![Episode 20](episode_20.gif)
+
+*These GIFs show the Franka Panda robot successfully reaching for randomly positioned red targets in the simulation environment. The agent learned this behavior through reinforcement learning using PPO (Proximal Policy Optimization) over 5 million training steps. Each episode demonstrates different target positions and arm trajectories.*
+
+### Additional Results
+For the complete set of 20 evaluation episodes, see the `tuned_results_05/` folder containing all original MP4 recordings.
 
 ---
 ## Setup and Installation
