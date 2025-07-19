@@ -166,6 +166,13 @@ trained_models/*.pkl
 trained_models/*.pt
 trained_models/*.pth
 
+# Checkpoints
+checkpoints/
+checkpoint/
+*.ckpt
+*.checkpoint
+model_checkpoints/
+
 # Logs
 logs/*.log
 logs/tensorboard/
