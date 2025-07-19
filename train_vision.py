@@ -66,7 +66,7 @@ else:
 # --- Continue or Start Training ---
 print("Starting training...")
 model.learn(
-    total_timesteps=TOTAL_TIMESTEPS, 
+    total_timesteps=TIMESTEPS, 
     # This is crucial for resuming: it tells SB3 to continue the step count
     reset_num_timesteps=False if RESUME_FROM_CHECKPOINT else True, 
     tb_log_name=MODEL_NAME,
