@@ -1,94 +1,90 @@
-# train_mujoco_rgbd.py
+# train_fetch_rgbd.py
 
 import gymnasium as gym
-from gymnasium import spaces
+import gymnasium_robotics
+from gymnasium.wrappers import PixelObservationWrapper
 import torch
 import torch.nn as nn
 from stable_baselines3 import PPO
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-import os
-from gymnasium.envs.registration import register
-# Import the CheckpointCallback
 from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.env_util import make_vec_env
+import os
 
-# --- Register the NEW MUJOCO environment ---
-register(
-     id="FrankaReachMujocoRGBD-v0",
-     entry_point="environments.franka_reach_env_mujoco:FrankaReachEnvMujoco",
-)
-
-# --- The Custom Feature Extractor for RGB-D remains THE SAME ---
-class CustomCombinedExtractor(BaseFeaturesExtractor):
-    def __init__(self, observation_space: spaces.Dict):
-        super().__init__(observation_space, features_dim=1)
-        extractors = {}
-        rgb_space = observation_space['rgb']
-        extractors['rgb'] = nn.Sequential(
-            nn.Conv2d(rgb_space.shape[2], 32, kernel_size=8, stride=4, padding=0), nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0), nn.ReLU(),
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0), nn.ReLU(),
+# --- 1. Custom CNN for RGB-D Data ---
+# We create a simple custom network to handle the 4-channel (RGB-D) input.
+class RgbdCnn(BaseFeaturesExtractor):
+    def __init__(self, observation_space: gym.spaces.Box, features_dim: int = 256):
+        super().__init__(observation_space, features_dim)
+        # The observation space from the wrapper has a shape of (4, H, W)
+        n_input_channels = observation_space.shape[0]
+        self.cnn = nn.Sequential(
+            nn.Conv2d(n_input_channels, 32, kernel_size=8, stride=4, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=0),
+            nn.ReLU(),
             nn.Flatten(),
         )
+        # Compute the flattened size once
         with torch.no_grad():
-            sample_rgb = torch.as_tensor(rgb_space.sample()[None]).permute(0, 3, 1, 2).float()
-            n_flatten_rgb = extractors['rgb'](sample_rgb).shape[1]
-        depth_space = observation_space['depth']
-        extractors['depth'] = nn.Sequential(
-            nn.Conv2d(depth_space.shape[2], 16, kernel_size=8, stride=4, padding=0), nn.ReLU(),
-            nn.Conv2d(16, 32, kernel_size=4, stride=2, padding=0), nn.ReLU(),
-            nn.Flatten(),
-        )
-        with torch.no_grad():
-            sample_depth = torch.as_tensor(depth_space.sample()[None]).permute(0, 3, 1, 2).float()
-            n_flatten_depth = extractors['depth'](sample_depth).shape[1]
-        self.extractors = nn.ModuleDict(extractors)
-        self._features_dim = n_flatten_rgb + n_flatten_depth
+            sample_tensor = torch.as_tensor(observation_space.sample()[None]).float()
+            n_flatten = self.cnn(sample_tensor).shape[1]
+        self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim), nn.ReLU())
 
-    def forward(self, observations: dict) -> torch.Tensor:
-        encoded_tensor_list = []
-        for key, extractor in self.extractors.items():
-            obs_tensor = observations[key].permute(0, 3, 1, 2)
-            encoded_tensor_list.append(extractor(obs_tensor))
-        return torch.cat(encoded_tensor_list, dim=1)
+    def forward(self, observations: torch.Tensor) -> torch.Tensor:
+        # Normalize the RGB channels (first 3), leave depth (channel 4) as is
+        observations[:, :3, :, :] = observations[:, :3, :, :] / 255.0
+        return self.linear(self.cnn(observations))
 
-# --- Parameters ---
-MODEL_NAME = "PPO_Franka_Mujoco_RGBD"
-LOG_DIR = "logs_mujoco"
-MODELS_DIR = "trained_models_mujoco"
-CHECKPOINT_DIR = "checkpoints_mujoco"
-TIMESTEPS = 2_000_000 
+# --- 2. Parameters ---
+MODEL_NAME = "PPO_FetchReach_RGBD"
+LOG_DIR = "logs_fetch"
+MODELS_DIR = "trained_models_fetch"
+CHECKPOINT_DIR = "checkpoints_fetch"
+TIMESTEPS = 2_000_000
 
 os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
-# --- Instantiate the MuJoCo Environment ---
-env = gym.make("FrankaReachMujocoRGBD-v0", render_mode=None)
+# --- 3. Create and Wrap the Environment ---
+def make_env():
+    # Load the standard 'FetchReach-v2' environment
+    env = gym.make("FetchReach-v2")
+    # Wrap it to get 84x84 RGB-D camera observations.
+    # pixels_only=True simplifies the observation to just the image.
+    env = PixelObservationWrapper(env, pixels_only=True, camera_name="default", depth=True, render_kwargs={"width": 84, "height": 84})
+    return env
 
-# --- Setup the Checkpoint Callback ---
+# Use the Stable Baselines3 vectorized environment helper
+env = make_vec_env(make_env, n_envs=1)
+
+
+# --- 4. Setup Training ---
 checkpoint_callback = CheckpointCallback(
-  save_freq=100_000,
-  save_path=CHECKPOINT_DIR,
-  name_prefix=MODEL_NAME
+  save_freq=100_000, save_path=CHECKPOINT_DIR, name_prefix=MODEL_NAME
 )
-
-policy_kwargs = {"features_extractor_class": CustomCombinedExtractor}
+policy_kwargs = {
+    "features_extractor_class": RgbdCnn,
+    "features_extractor_kwargs": dict(features_dim=256),
+}
 
 model = PPO(
-    "MultiInputPolicy", env, policy_kwargs=policy_kwargs,
+    "CnnPolicy", env, policy_kwargs=policy_kwargs,
     verbose=1, tensorboard_log=LOG_DIR, device="cuda",
-    learning_rate=0.0001, n_steps=1024, batch_size=64, ent_coef=0.01,
+    learning_rate=0.0001, n_steps=2048, batch_size=64,
 )
 
-# --- Train the model with the callback ---
+print(f"\n🚀 Starting training for {TIMESTEPS} timesteps on your local machine...")
 model.learn(
-    total_timesteps=TIMESTEPS, 
-    tb_log_name=MODEL_NAME,
-    callback=checkpoint_callback
+    total_timesteps=TIMESTEPS, tb_log_name=MODEL_NAME, callback=checkpoint_callback
 )
 
 model_path = os.path.join(MODELS_DIR, f"{MODEL_NAME}.zip")
 model.save(model_path)
-print(f"\nMuJoCo model saved to: {model_path}")
+print(f"\n----------- ✅ Training Finished -----------")
+print(f"Final FetchReach model saved to: {model_path}")
 
 env.close()

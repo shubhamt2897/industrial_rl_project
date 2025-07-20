@@ -14,7 +14,7 @@ register(id="FrankaReachVision-v0", entry_point="environments.franka_reach_env_v
 # --- Parameters ---
 # --- CORRECTED MODEL PATH ---
 # This now exactly matches the filename in your checkpoints folder
-MODEL_PATH = "checkpoints/PPO_Franka_Vision_1000000_steps" 
+MODEL_PATH = "checkpoints/PPO_Franka_Vision_1450000_steps" 
 
 RECORDINGS_DIR = "vision_model_1M_results"
 EPISODES_TO_RUN = 20

@@ -1,0 +1,12 @@
+<mujoco model="franka_reach_scene_custom">
+  <compiler meshdir="../assets/mujoco/franka_emika_panda/assets/"/>
+  
+  <include file="../assets/mujoco/franka_emika_panda/panda.xml"/>
+
+  <worldbody>
+    <body name="target" pos="0.5 0 0.5">
+      <geom type="sphere" size="0.03" rgba="1 0 0 1" contype="0" conaffinity="0"/>
+    </body>
+    <camera name="fixed" pos="0 0 1.2" xyaxes="1 0 0 0 1 0"/>
+  </worldbody>
+</mujoco>
