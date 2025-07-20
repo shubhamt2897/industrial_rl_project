@@ -172,6 +172,25 @@ checkpoint/
 *.ckpt
 *.checkpoint
 model_checkpoints/
+// ...existing code...
+
+# Checkpoints
+checkpoints/
+checkpoint/
+*.ckpt
+*.checkpoint
+model_checkpoints/
+
+# Assets (3D models, textures, large files)
+assets/
+environments/assets/
+*.stl
+*.obj
+*.dae
+*.urdf
+*.xacro
+*.mesh
+
 
 # Logs
 logs/*.log

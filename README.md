@@ -4,8 +4,6 @@ This is my personal skill development project exploring reinforcement learning f
 
 The project represents my learning journey through different levels of complexity, with each stage expanding my understanding of RL, computer vision, and robotic control.
 
-
-
 ---
 ## Project Roadmap
 
@@ -14,27 +12,26 @@ This project is divided into several stages, each representing a different level
 ### ✅ Level 1: State-Based RL (Implemented)
 * **Goal:** Teach the agent to control the robot using perfect, noise-free 3D coordinate information.
 * **Method:** The agent receives the 3D position of its hand and the target as input (`MlpPolicy`).
+* **Simulator:** PyBullet
 * **Purpose:** To master the fundamentals of robot control, reward shaping, and the RL training loop.
-* **Files:** `franka_reach_env.py`, `train.py`, `evaluate.py`
 
 ### ✅ Level 2: Vision-Based RL (Implemented)
 * **Goal:** Teach the agent to perform the same task using only "pixels-only" (RGB) data from a simulated camera.
 * **Method:** The agent receives an 84x84 image as input and must learn to interpret it using a Convolutional Neural Network (`CnnPolicy`).
-* **Purpose:** To solve the fundamental perception problem of inferring 3D world state from a 2D image (visual servoing).
-* **Files:** `franka_reach_env_vision.py`, `train_vision.py`, `evaluate_vision.py`
+* **Simulator:** PyBullet
+* **Purpose:** To solve the fundamental perception problem of inferring 3D world state from a 2D image.
 
-### 🔜 Level 3: Advanced Perception (Future Work)
-* **Goal:** Enhance the agent's perception by incorporating more sensor data.
-* **Method:** The observation space would be modified to include a depth channel (RGB-D), providing the agent with an informative shortcut for understanding 3D geometry.
-* **Purpose:** To explore how different sensor modalities can make robotic tasks easier and more reliable.
+### 🔜 Level 3: Advanced Perception with MuJoCo (Next Step)
+* **Goal:** Enhance the agent's perception by incorporating depth data (RGB-D) and transitioning to a more physically accurate simulator.
+* **Method:** The observation space will be modified to include a depth channel (RGB-D). We will rebuild the environment using **MuJoCo**, a fast and accurate physics simulator popular in robotics research.
+* **Purpose:** To work with multi-modal sensor data and a research-grade simulator.
 
-### 🚀 Level 4: Vision-Language-Action (VLA) Models (Future Work)
-* **Goal:** Control the robot using natural language commands.
-* **Method:** Integrate a large, pre-trained VLA model (e.g., from Hugging Face `lerobot`) into the environment. The model would take a camera image and a text prompt (e.g., "pick up the red block") to generate actions.
-* **Purpose:** To apply state-of-the-art research models to achieve complex, language-instructed tasks.
+### 🚀 Level 4: ROS2 Integration (Final Goal)
+* **Goal:** Deploy the best-performing vision-based policy in a ROS2-enabled simulation environment.
+* **Method:** The agent's policy will be wrapped in a ROS2 node. This node will subscribe to camera topics and publish control commands, interacting with a simulated robot in Gazebo or Isaac Sim.
+* **Purpose:** To learn the standard Sim-to-Real workflow used by robotics companies.
 
 ---
-
 ## 🎥 Trained Simulation Results
 
 Here's a high-quality demonstration of my trained agent performing the reaching task across multiple episodes:
@@ -51,7 +48,7 @@ For the complete set of 20 evaluation episodes, see the `tuned_results_05/` fold
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/shubhamt2897/industrial_rl_project.git
+    git clone [https://github.com/shubhamt2897/industrial_rl_project.git](https://github.com/shubhamt2897/industrial_rl_project.git)
     cd industrial_rl_project
     ```
 

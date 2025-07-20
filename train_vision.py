@@ -1,11 +1,10 @@
-# train_vision.py (with Checkpoints)
+# train_vision.py (Corrected Resume Logic)
 
 import gymnasium as gym
 from stable_baselines3 import PPO
 import os
+import re
 from gymnasium.envs.registration import register
-
-# NEW: Import the CheckpointCallback
 from stable_baselines3.common.callbacks import CheckpointCallback
 
 # --- Register the vision-based environment ---
@@ -15,42 +14,49 @@ register(
 )
 
 # --- Parameters ---
+# CORRECTED: This name must EXACTLY match the prefix of your saved checkpoint files
 MODEL_NAME = "PPO_Franka_Vision"
 LOG_DIR = "logs"
 MODELS_DIR = "trained_models"
-CHECKPOINT_DIR = "checkpoints" # Folder for automatic saves
-TIMESTEPS = 2_000_000 # A good number for a serious vision run
-
-# --- RESUME CONTROL ---
-# Set this to the checkpoint path if you want to resume, otherwise leave it as None
-RESUME_FROM_CHECKPOINT = "checkpoints/PPO_Franka_Vision_Local_1000000_steps.zip" # or None to start new
-
+CHECKPOINT_DIR = "checkpoints"
+TOTAL_TIMESTEPS = 2_000_000 
 
 os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
-# --- Use the vision environment ---
+# --- Setup Environment ---
 env = gym.make("FrankaReachVision-v0", render_mode=None)
 
-# --- NEW: Setup the Checkpoint Callback ---
-# This will save a checkpoint of the model every 50,000 steps
+# --- Setup Checkpoint Callback ---
 checkpoint_callback = CheckpointCallback(
   save_freq=50_000,
   save_path=CHECKPOINT_DIR,
   name_prefix=MODEL_NAME
 )
 
+# --- Smart Resume Logic ---
+latest_checkpoint = None
+if os.path.exists(CHECKPOINT_DIR) and len(os.listdir(CHECKPOINT_DIR)) > 0:
+    # Find all checkpoint files that match the model name
+    checkpoints = [f for f in os.listdir(CHECKPOINT_DIR) if f.startswith(MODEL_NAME) and f.endswith(".zip")]
+    if checkpoints:
+        # Sort by the step number in the filename to find the latest
+        checkpoints.sort(key=lambda f: int(re.search(r'_(\d+)_steps', f).group(1)))
+        latest_checkpoint = os.path.join(CHECKPOINT_DIR, checkpoints[-1])
+        print(f"Found latest checkpoint: {latest_checkpoint}")
+
 # --- Create or Load the model ---
-if RESUME_FROM_CHECKPOINT:
-    print(f"Loading and resuming model from: {RESUME_FROM_CHECKPOINT}")
+if latest_checkpoint:
+    print(f"Loading and resuming model from: {latest_checkpoint}")
+    # When loading, SB3 automatically handles setting the device
     model = PPO.load(
-        RESUME_FROM_CHECKPOINT,
+        latest_checkpoint,
         env=env,
         tensorboard_log=LOG_DIR
     )
 else:
-    print("Creating a new model...")
+    print("No checkpoints found. Creating a new model...")
     model = PPO(
         "CnnPolicy",
         env,
@@ -66,9 +72,9 @@ else:
 # --- Continue or Start Training ---
 print("Starting training...")
 model.learn(
-    total_timesteps=TIMESTEPS, 
-    # This is crucial for resuming: it tells SB3 to continue the step count
-    reset_num_timesteps=False if RESUME_FROM_CHECKPOINT else True, 
+    total_timesteps=TOTAL_TIMESTEPS,
+    # Crucial for resuming: continue step count if loading, reset if new
+    reset_num_timesteps=False if latest_checkpoint else True, 
     tb_log_name=MODEL_NAME,
     callback=checkpoint_callback
 )
